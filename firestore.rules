@@ -1,0 +1,279 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && (request.auth.token.email_verified == true || request.auth.token.firebase.sign_in_provider == 'google.com');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // User Profile Validation
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'email', 'authProvider', 'emailVerified', 'role', 'accountStatus', 'createdAt', 'updatedAt']) &&
+             data.keys().hasOnly(['uid', 'displayName', 'email', 'photoURL', 'authProvider', 'emailVerified', 'role', 'accountStatus', 'createdAt', 'updatedAt', 'lastLoginAt', 'preferences', 'onboardingCompleted']) &&
+             data.uid is string && data.uid.size() <= 128 &&
+             data.displayName is string && data.displayName.size() <= 100 &&
+             data.email is string && data.email.size() <= 200 &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 1000)) &&
+             data.authProvider in ['password', 'google.com', 'guest'] &&
+             data.emailVerified is bool &&
+             data.role in ['user', 'admin'] &&
+             data.accountStatus in ['active', 'suspended'] &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             data.updatedAt is string && data.updatedAt.size() <= 50;
+    }
+
+    // Task Validation
+    function isValidTask(data) {
+      return data.keys().hasAll(['userId', 'title', 'priority', 'status', 'bucket', 'archived', 'createdAt', 'updatedAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'title', 'description', 'priority', 'status', 'bucket', 'category', 'tags', 'subtasks', 'estimatedMinutes', 'dueDate', 'startDate', 'reminderAt', 'recurrence', 'archived', 'completedAt', 'createdAt', 'updatedAt']) &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 2000)) &&
+             data.priority in ['low', 'medium', 'high'] &&
+             data.status in ['not_started', 'in_progress', 'blocked', 'completed'] &&
+             data.bucket in ['inbox', 'today', 'upcoming', 'someday'] &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 50)) &&
+             (!('tags' in data) || (data.tags is list && data.tags.size() <= 20)) &&
+             (!('subtasks' in data) || (data.subtasks is list && data.subtasks.size() <= 50)) &&
+             (!('estimatedMinutes' in data) || data.estimatedMinutes is number) &&
+             (!('dueDate' in data) || (data.dueDate is string && data.dueDate.size() <= 50)) &&
+             (!('startDate' in data) || (data.startDate is string && data.startDate.size() <= 50)) &&
+             (!('reminderAt' in data) || (data.reminderAt is string && data.reminderAt.size() <= 50)) &&
+             (!('recurrence' in data) || data.recurrence in ['none', 'daily', 'weekdays', 'weekly', 'monthly']) &&
+             data.archived is bool &&
+             (!('completedAt' in data) || (data.completedAt is string && data.completedAt.size() <= 50)) &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             data.updatedAt is string && data.updatedAt.size() <= 50;
+    }
+
+    // Habit Validation
+    function isValidHabit(data) {
+      return data.keys().hasAll(['userId', 'title', 'frequency', 'streak', 'bestStreak', 'archived', 'createdAt', 'updatedAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'title', 'description', 'icon', 'color', 'frequency', 'targetDays', 'streak', 'bestStreak', 'archived', 'createdAt', 'updatedAt']) &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 150 &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 500)) &&
+             (!('icon' in data) || (data.icon is string && data.icon.size() <= 50)) &&
+             (!('color' in data) || (data.color is string && data.color.size() <= 30)) &&
+             data.frequency in ['daily', 'weekdays', 'weekly', 'custom'] &&
+             (!('targetDays' in data) || (data.targetDays is list && data.targetDays.size() <= 7)) &&
+             data.streak is number &&
+             data.bestStreak is number &&
+             data.archived is bool &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             data.updatedAt is string && data.updatedAt.size() <= 50;
+    }
+
+    // HabitLog Validation
+    function isValidHabitLog(data) {
+      return data.keys().hasAll(['userId', 'habitId', 'date', 'completed']) &&
+             data.keys().hasOnly(['id', 'userId', 'habitId', 'date', 'completed', 'completedAt']) &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.habitId is string && data.habitId.size() <= 128 &&
+             data.date is string && data.date.size() <= 20 &&
+             data.completed is bool &&
+             (!('completedAt' in data) || (data.completedAt is string && data.completedAt.size() <= 50));
+    }
+
+    // UserPreference Validation
+    function isValidUserPreference(data) {
+      return data.keys().hasAll(['userId', 'theme', 'notificationsEnabled', 'soundEnabled']) &&
+             data.keys().hasOnly(['userId', 'theme', 'notificationsEnabled', 'soundEnabled', 'focusSessionDuration', 'breakDuration', 'updatedAt']) &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.theme in ['system', 'light', 'dark'] &&
+             data.notificationsEnabled is bool &&
+             data.soundEnabled is bool &&
+             (!('focusSessionDuration' in data) || data.focusSessionDuration is number) &&
+             (!('breakDuration' in data) || data.breakDuration is number) &&
+             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // Activity Event Validation (Strictly non-sensitive telemetry)
+    function isValidActivityEvent(data) {
+      return data.keys().hasAll(['id', 'userId', 'eventType', 'timestamp', 'appVersion', 'platform']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.eventType is string && data.eventType.size() <= 50 &&
+             data.timestamp is string && data.timestamp.size() <= 50 &&
+             data.appVersion is string && data.appVersion.size() <= 20 &&
+             data.platform is string && data.platform.size() <= 30;
+    }
+
+    // Health Error Log Validation
+    function isValidHealthError(data) {
+      return data.keys().hasAll(['id', 'errorType', 'message', 'timestamp']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.errorType in ['auth_failure', 'sync_failure', 'db_error', 'notification_failure', 'app_error'] &&
+             data.message is string && data.message.size() <= 1000 &&
+             data.timestamp is string && data.timestamp.size() <= 50;
+    }
+
+    // Connection test document
+    match /test/{docId} {
+      allow read: if isSignedIn();
+    }
+
+    // Users Collection - User Profile and Role Protection
+    match /users/{userId} {
+      // User can view their own profile; admins can view all profiles
+      allow get: if (isOwner(userId) || isAdmin()) && isValidId(userId);
+      // Only admins can list/query all user profiles
+      allow list: if isAdmin();
+      // Registration: User can only create profile with role 'user' and accountStatus 'active'
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().uid == userId &&
+                       incoming().role == 'user' &&
+                       incoming().accountStatus == 'active' &&
+                       isValidUserProfile(incoming());
+      // Updates: Ordinary users cannot change role or accountStatus
+      allow update: if isValidId(userId) && isValidUserProfile(incoming()) && (
+        (isOwner(userId) &&
+         incoming().uid == existing().uid &&
+         incoming().role == existing().role &&
+         incoming().accountStatus == existing().accountStatus &&
+         incoming().createdAt == existing().createdAt &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'lastLoginAt', 'emailVerified', 'preferences', 'onboardingCompleted', 'updatedAt'])) ||
+        (isAdmin() &&
+         incoming().uid == existing().uid &&
+         incoming().createdAt == existing().createdAt)
+      );
+      // Account deletion
+      allow delete: if (isOwner(userId) || isAdmin()) && isValidId(userId);
+    }
+
+    // Tasks Collection - Strict Private User Isolation
+    match /tasks/{taskId} {
+      allow get: if isOwner(existing().userId) && isValidId(taskId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isOwner(incoming().userId) &&
+                       isVerifiedUser() &&
+                       isValidId(taskId) &&
+                       isValidTask(incoming());
+      allow update: if isOwner(existing().userId) &&
+                       isVerifiedUser() &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidId(taskId) &&
+                       isValidTask(incoming());
+      allow delete: if isOwner(existing().userId) && isValidId(taskId);
+    }
+
+    // Habits Collection - Strict Private User Isolation
+    match /habits/{habitId} {
+      allow get: if isOwner(existing().userId) && isValidId(habitId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isOwner(incoming().userId) &&
+                       isVerifiedUser() &&
+                       isValidId(habitId) &&
+                       isValidHabit(incoming());
+      allow update: if isOwner(existing().userId) &&
+                       isVerifiedUser() &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidId(habitId) &&
+                       isValidHabit(incoming());
+      allow delete: if isOwner(existing().userId) && isValidId(habitId);
+    }
+
+    // HabitLogs Collection - Strict Private User Isolation
+    match /habitLogs/{logId} {
+      allow get: if isOwner(existing().userId) && isValidId(logId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isOwner(incoming().userId) &&
+                       isVerifiedUser() &&
+                       isValidId(logId) &&
+                       isValidHabitLog(incoming());
+      allow update: if isOwner(existing().userId) &&
+                       isVerifiedUser() &&
+                       incoming().userId == existing().userId &&
+                       incoming().habitId == existing().habitId &&
+                       incoming().date == existing().date &&
+                       isValidId(logId) &&
+                       isValidHabitLog(incoming());
+      allow delete: if isOwner(existing().userId) && isValidId(logId);
+    }
+
+    // UserPreferences Collection
+    match /userPreferences/{userId} {
+      allow get: if (isOwner(userId) || isAdmin()) && isValidId(userId);
+      allow list: if isOwner(userId) && isValidId(userId);
+      allow create: if isOwner(userId) &&
+                       isVerifiedUser() &&
+                       incoming().userId == userId &&
+                       isValidId(userId) &&
+                       isValidUserPreference(incoming());
+      allow update: if isOwner(userId) &&
+                       isVerifiedUser() &&
+                       incoming().userId == userId &&
+                       isValidId(userId) &&
+                       isValidUserPreference(incoming());
+      allow delete: if (isOwner(userId) || isAdmin()) && isValidId(userId);
+    }
+
+    // AdminLogs and adminAuditLogs Collection - Audit Log Only Readable by Admins
+    match /adminLogs/{logId} {
+      allow get, list: if isAdmin() && isValidId(logId);
+      allow create: if isAdmin() && isValidId(logId);
+      allow update, delete: if false; // Append-only audit records
+    }
+
+    match /adminAuditLogs/{logId} {
+      allow get, list: if isAdmin() && isValidId(logId);
+      allow create: if isAdmin() && isValidId(logId);
+      allow update, delete: if false;
+    }
+
+    // Activity Events Collection - Ingested by Users (self-only) or Admins, Readable by Admins
+    match /activityEvents/{eventId} {
+      allow get, list: if isAdmin() && isValidId(eventId);
+      allow create: if (isSignedIn() && incoming().userId == request.auth.uid && isValidId(eventId) && isValidActivityEvent(incoming())) ||
+                       (isAdmin() && isValidId(eventId) && isValidActivityEvent(incoming()));
+      allow update, delete: if false; // Append-only telemetry
+    }
+
+    // Daily Analytics Aggregates - Read by Admins, Written by Backend
+    match /dailyAnalytics/{date} {
+      allow get, list: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Operational Health Errors - Created by Clients/Backend, Managed by Admins
+    match /healthErrors/{errorId} {
+      allow get, list: if isAdmin() && isValidId(errorId);
+      allow create: if isValidId(errorId) && isValidHealthError(incoming());
+      allow update: if isAdmin() && isValidId(errorId);
+      allow delete: if false;
+    }
+  }
+}

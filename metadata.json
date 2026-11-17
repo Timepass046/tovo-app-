@@ -1,0 +1,6 @@
+{
+  "name": "Tovo",
+  "description": "Capture thoughts, organize tasks, manage reminders, build habits, and turn ideas into action with Tovo personal productivity.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

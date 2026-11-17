@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Editorial Productivity Palette - Light Theme */
+  --bg-app: #F7F6F2;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #FDFCFA;
+  --bg-surface-muted: #EFEFE9;
+  --border-subtle: #E8E7E0;
+  --border-strong: #D5D3CA;
+  --text-primary: #20231F;
+  --text-secondary: #6B6F67;
+  --text-tertiary: #92968E;
+  --accent-primary: #303FCA;
+  --accent-primary-hover: #2633A8;
+  --accent-primary-muted: #EEF0FD;
+  --accent-sage: #DCE7DB;
+  --accent-sage-dark: #375336;
+  --status-warning: #C47D14;
+  --status-warning-bg: #FCF5EB;
+  --status-danger: #C73E2E;
+  --status-danger-bg: #FDF1EF;
+  --status-success: #2E7D32;
+  --status-success-bg: #EDF7EE;
+  /* Safe Area Insets — resolves Capacitor SystemBars CSS vars and native env() without double-padding */
+  --tovo-safe-top: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+  --tovo-safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
+  --tovo-safe-left: max(env(safe-area-inset-left, 0px), var(--safe-area-inset-left, 0px));
+  --tovo-safe-right: max(env(safe-area-inset-right, 0px), var(--safe-area-inset-right, 0px));
+}
+
+.dark {
+  /* Tovo Refined Editorial Productivity Palette - Dark Theme */
+  --bg-app: #151713;
+  --bg-surface: #1D201B;
+  --bg-surface-elevated: #242720;
+  --bg-surface-muted: #2A2E28;
+  --border-subtle: #30332D;
+  --border-strong: #3E433B;
+  --text-primary: #F4F3EE;
+  --text-secondary: #A4A69F;
+  --text-tertiary: #6E726A;
+  --accent-primary: #6467F5;
+  --accent-primary-hover: #7579F7;
+  --accent-primary-muted: #1D214E;
+  --accent-sage: #91AD8C;
+  --accent-sage-dark: #A5C4A2;
+  --status-warning: #DE932A;
+  --status-warning-bg: #2B2113;
+  --status-danger: #E05445;
+  --status-danger-bg: #2E1917;
+  --status-success: #43A047;
+  --status-success-bg: #162618;
+}
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  html,
+  body {
+    overflow-x: clip;
+    max-width: 100%;
+  }
+  body {
+    overscroll-behavior-y: none;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+  }
+}
+
+/* Hide scrollbar for clean editorial panels */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

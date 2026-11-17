@@ -1,0 +1,201 @@
+{
+  "entities": {
+    "Task": {
+      "title": "Task",
+      "description": "A task or captured note in MindDrop",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200, "minLength": 1 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "status": { "type": "string", "enum": ["not_started", "in_progress", "blocked", "completed"] },
+        "bucket": { "type": "string", "enum": ["inbox", "today", "upcoming", "someday"] },
+        "category": { "type": "string", "maxLength": 50 },
+        "tags": { "type": "array" },
+        "subtasks": { "type": "array" },
+        "estimatedMinutes": { "type": "number" },
+        "dueDate": { "type": "string", "maxLength": 50 },
+        "startDate": { "type": "string", "maxLength": 50 },
+        "reminderAt": { "type": "string", "maxLength": 50 },
+        "recurrence": { "type": "string", "enum": ["none", "daily", "weekdays", "weekly", "monthly"] },
+        "archived": { "type": "boolean" },
+        "completedAt": { "type": "string", "maxLength": 50 },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["userId", "title", "priority", "status", "bucket", "archived", "createdAt", "updatedAt"]
+    },
+    "Habit": {
+      "title": "Habit",
+      "description": "A recurring daily or weekly habit routine",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 150, "minLength": 1 },
+        "description": { "type": "string", "maxLength": 500 },
+        "icon": { "type": "string", "maxLength": 50 },
+        "color": { "type": "string", "maxLength": 30 },
+        "frequency": { "type": "string", "enum": ["daily", "weekdays", "weekly", "custom"] },
+        "targetDays": { "type": "array" },
+        "streak": { "type": "number" },
+        "bestStreak": { "type": "number" },
+        "archived": { "type": "boolean" },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["userId", "title", "frequency", "streak", "bestStreak", "archived", "createdAt", "updatedAt"]
+    },
+    "HabitLog": {
+      "title": "HabitLog",
+      "description": "Daily record of habit execution",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "habitId": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 20 },
+        "completed": { "type": "boolean" },
+        "completedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["userId", "habitId", "date", "completed"]
+    },
+    "UserPreference": {
+      "title": "UserPreference",
+      "description": "User preferences and app settings",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "theme": { "type": "string", "enum": ["system", "light", "dark"] },
+        "notificationsEnabled": { "type": "boolean" },
+        "soundEnabled": { "type": "boolean" },
+        "focusSessionDuration": { "type": "number" },
+        "breakDuration": { "type": "number" },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["userId", "theme", "notificationsEnabled", "soundEnabled"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account profile and authentication metadata",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 200 },
+        "photoURL": { "type": "string", "maxLength": 1000 },
+        "authProvider": { "type": "string", "enum": ["password", "google.com", "guest"] },
+        "emailVerified": { "type": "boolean" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "accountStatus": { "type": "string", "enum": ["active", "suspended"] },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 },
+        "lastLoginAt": { "type": "string", "maxLength": 50 },
+        "onboardingCompleted": { "type": "boolean" }
+      },
+      "required": ["uid", "displayName", "email", "authProvider", "emailVerified", "role", "accountStatus", "createdAt", "updatedAt"]
+    },
+    "AdminLog": {
+      "title": "AdminLog",
+      "description": "Audit logs for administrative operations",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "adminUid": { "type": "string", "maxLength": 128 },
+        "adminEmail": { "type": "string", "maxLength": 200 },
+        "action": { "type": "string", "enum": ["suspend_user", "reactivate_user", "delete_user", "promote_admin", "revoke_admin", "bootstrap_admin", "admin_login", "settings_change"] },
+        "targetUid": { "type": "string", "maxLength": 128 },
+        "targetEmail": { "type": "string", "maxLength": 200 },
+        "reason": { "type": "string", "maxLength": 500 },
+        "timestamp": { "type": "string", "maxLength": 50 },
+        "result": { "type": "string", "enum": ["success", "failure"] }
+      },
+      "required": ["adminUid", "adminEmail", "action", "targetUid", "targetEmail", "timestamp"]
+    },
+    "ActivityEvent": {
+      "title": "ActivityEvent",
+      "description": "User product activity events for aggregated analytics",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "eventType": { "type": "string", "maxLength": 50 },
+        "timestamp": { "type": "string", "maxLength": 50 },
+        "appVersion": { "type": "string", "maxLength": 20 },
+        "platform": { "type": "string", "maxLength": 30 },
+        "metadata": { "type": "object" }
+      },
+      "required": ["id", "userId", "eventType", "timestamp", "appVersion", "platform"]
+    },
+    "HealthError": {
+      "title": "HealthError",
+      "description": "Operational error logs for monitoring application health",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "errorType": { "type": "string", "enum": ["auth_failure", "sync_failure", "db_error", "notification_failure", "app_error"] },
+        "message": { "type": "string", "maxLength": 1000 },
+        "timestamp": { "type": "string", "maxLength": 50 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "platform": { "type": "string", "maxLength": 30 },
+        "resolved": { "type": "boolean" }
+      },
+      "required": ["id", "errorType", "message", "timestamp"]
+    },
+    "DailyAnalytics": {
+      "title": "DailyAnalytics",
+      "description": "Daily aggregated application usage metrics",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "maxLength": 20 },
+        "tasksCreated": { "type": "number" },
+        "tasksCompleted": { "type": "number" },
+        "activeUsers": { "type": "number" },
+        "habitsCompleted": { "type": "number" },
+        "remindersScheduled": { "type": "number" },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["date", "tasksCreated", "tasksCompleted", "activeUsers", "habitsCompleted", "remindersScheduled"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profiles and account status"
+    },
+    "/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/Task" },
+      "description": "User tasks and quick notes"
+    },
+    "/habits/{habitId}": {
+      "schema": { "$ref": "#/entities/Habit" },
+      "description": "User daily and recurring habits"
+    },
+    "/habitLogs/{habitLogId}": {
+      "schema": { "$ref": "#/entities/HabitLog" },
+      "description": "Daily completion logs for habits"
+    },
+    "/userPreferences/{userId}": {
+      "schema": { "$ref": "#/entities/UserPreference" },
+      "description": "Settings and preferences for the user"
+    },
+    "/adminLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AdminLog" },
+      "description": "Auditable log of administrative events"
+    },
+    "/activityEvents/{eventId}": {
+      "schema": { "$ref": "#/entities/ActivityEvent" },
+      "description": "Activity event logs for analytics"
+    },
+    "/dailyAnalytics/{date}": {
+      "schema": { "$ref": "#/entities/DailyAnalytics" },
+      "description": "Aggregated daily product metrics"
+    },
+    "/healthErrors/{errorId}": {
+      "schema": { "$ref": "#/entities/HealthError" },
+      "description": "Operational health error records"
+    }
+  }
+}
